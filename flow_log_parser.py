@@ -2,37 +2,38 @@ import csv
 
 FLOW_LOG_TOKENS = 14
 
-PROTOCOLS = {
-    0:	'hopopt',
-    1:	'ICMP',
-    2:	'IGMP',
-    3:	'GGP',
-    4:	'IPv4',
-    5:	'ST',
-    6: 'tcp',
-    7:	'CBT',
-    8:	'EGP',
-    9:	'IGP',
-}
+PROTOCOLS = {}
 
 FLOW_LOG_FILENAME = 'flow_log.txt'
+PROTOCOL_NUMBER_FILENAME = 'protocol-numbers-1.csv'
+LOOKUP_TABLE_FILENAME = 'lookup_table.csv'
 TAG_COUNT_FILENAME = 'tag_count.csv'
 PORT_PROTOCOL_FILENAME = 'port_protocol.csv'
 FLOW_LOGS = {}
 PORT_PROTOCOL_COUNT = {}
 UNTAGGED_FLOW_LOGS = 0
 
-lookup = {}
+LOOKUP = {}
+
+
+def parse_protocol_number():
+    with open(PROTOCOL_NUMBER_FILENAME) as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            number = int(row['Decimal'])
+            protocol = row['Keyword'].lower()
+            PROTOCOLS[number] = protocol
 
 def parse_lookup():
-    with open('lookup_table.csv') as file:
+    with open(LOOKUP_TABLE_FILENAME) as file:
         reader = csv.DictReader(file)
         for row in reader:
             port = int(row['dstport'])
             protocol = row['protocol'].lower()
-            if not port in lookup:
-                lookup[port] = {}
-            lookup[port][protocol] = row['tag']
+            if not port in LOOKUP:
+                LOOKUP[port] = {}
+
+            LOOKUP[port][protocol] = row['tag']
 
 def parse_flow_log():
     global UNTAGGED_FLOW_LOGS
@@ -52,19 +53,17 @@ def parse_flow_log():
                 PORT_PROTOCOL_COUNT[dstport][protocol] = 0
             PORT_PROTOCOL_COUNT[dstport][protocol] += 1
             
-            if not dstport in lookup or not protocol in lookup[dstport]:
+            if not dstport in LOOKUP or not protocol in LOOKUP[dstport]:
                 print(f"Not known dstport {line}")
                 UNTAGGED_FLOW_LOGS += 1
                 continue
 
-            tag = lookup[dstport][protocol]
+            tag = LOOKUP[dstport][protocol]
 
             if not tag in FLOW_LOGS:
                 FLOW_LOGS[tag] = 0
 
             FLOW_LOGS[tag] += 1
-
-            
 
 def output_flow_log_result():
     with open(TAG_COUNT_FILENAME, 'w') as csvfile:
@@ -76,6 +75,8 @@ def output_flow_log_result():
             writer.writerow({'Tag': tag, 'Count': FLOW_LOGS[tag]})
         if UNTAGGED_FLOW_LOGS > 0:
             writer.writerow({'Tag': 'Untagged', 'Count': UNTAGGED_FLOW_LOGS})
+    
+    print("Tag count written to {TAG_COUNT_FILENAME}")
 
 def output_port_protocol_result():
     with open(PORT_PROTOCOL_FILENAME, 'w') as csvfile:
@@ -87,10 +88,13 @@ def output_port_protocol_result():
             for protocol in PORT_PROTOCOL_COUNT[port]:
                 count = PORT_PROTOCOL_COUNT[port][protocol]
                 writer.writerow({'Port': port, 'Protocol': protocol, 'Count': count})
+    
+    print("Port protocol combination written to {PORT_PROTOCOL_FILENAME}")
 
 
 
 def main():
+    parse_protocol_number()
     parse_lookup()
     parse_flow_log()
     output_flow_log_result()
