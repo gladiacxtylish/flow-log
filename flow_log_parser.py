@@ -17,6 +17,9 @@ LOOKUP = {}
 
 
 def parse_protocol_number():
+    """
+    Parse the protocol file and construct the mapping
+    """
     with open(PROTOCOL_NUMBER_FILENAME) as file:
         reader = csv.DictReader(file)
         for row in reader:
@@ -25,6 +28,9 @@ def parse_protocol_number():
             PROTOCOLS[number] = protocol
 
 def parse_lookup():
+    """
+    Parse the lookup file and construct the mapping
+    """
     with open(LOOKUP_TABLE_FILENAME) as file:
         reader = csv.DictReader(file)
         for row in reader:
@@ -36,6 +42,9 @@ def parse_lookup():
             LOOKUP[port][protocol] = row['tag']
 
 def parse_flow_log():
+    """
+    Parse the flow log file and calculate the results
+    """
     global UNTAGGED_FLOW_LOGS
     with open(FLOW_LOG_FILENAME) as file:
         for line in file:
@@ -66,6 +75,9 @@ def parse_flow_log():
             FLOW_LOGS[tag] += 1
 
 def output_flow_log_result():
+    """
+    Write the tag count output to a file
+    """
     with open(TAG_COUNT_FILENAME, 'w') as csvfile:
         fieldnames = ['Tag', 'Count']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -76,9 +88,12 @@ def output_flow_log_result():
         if UNTAGGED_FLOW_LOGS > 0:
             writer.writerow({'Tag': 'Untagged', 'Count': UNTAGGED_FLOW_LOGS})
     
-    print("Tag count written to {TAG_COUNT_FILENAME}")
+    print(f"Tag count written to {TAG_COUNT_FILENAME}")
 
 def output_port_protocol_result():
+    """
+    Write the port protocol count to a file
+    """
     with open(PORT_PROTOCOL_FILENAME, 'w') as csvfile:
         fieldnames = ['Port', 'Protocol', 'Count']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
@@ -89,11 +104,14 @@ def output_port_protocol_result():
                 count = PORT_PROTOCOL_COUNT[port][protocol]
                 writer.writerow({'Port': port, 'Protocol': protocol, 'Count': count})
     
-    print("Port protocol combination written to {PORT_PROTOCOL_FILENAME}")
+    print(f"Port protocol combination written to {PORT_PROTOCOL_FILENAME}")
 
 
 
 def main():
+    """
+    Main method to trigger the parsing
+    """
     parse_protocol_number()
     parse_lookup()
     parse_flow_log()
