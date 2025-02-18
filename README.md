@@ -5,7 +5,7 @@ Write a program that can parse a file containing flow log data and maps each row
 ## Assumptions
 
 - The program only supports flow log format v2. If the line does not have 14 fields, it will be skipped.
-- The program only supports the first 10 of the IANA protocol numbers. To support more protocol numbers, add to the `PROTOCOLS` constants.
+- The program dose not supports the 148-252 of the IANA protocol numbers, as they are unassigned.
 - The program is tested to run with pythong version 3.
 
 ## Instruction
